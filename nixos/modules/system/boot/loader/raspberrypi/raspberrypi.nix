@@ -59,7 +59,7 @@ in
 
       version = mkOption {
         default = 2;
-        type = types.enum [ 0 1 2 3 ];
+        type = types.enum [ 0 1 2 3 4 ];
         description = ''
         '';
       };
@@ -96,10 +96,16 @@ in
   };
 
   config = mkIf cfg.enable {
-    assertions = singleton {
-      assertion = !pkgs.stdenv.hostPlatform.isAarch64 || cfg.version == 3;
-      message = "Only Raspberry Pi 3 supports aarch64.";
-    };
+    assertions = [
+      {
+        assertion = !pkgs.stdenv.hostPlatform.isAarch64 || cfg.version >= 3;
+        message = "Only the Raspberry Pi 3, 3B+, and 4 support aarch64.";
+      }
+      {
+        assertion = !cfg.uboot || cfg.version == 4;
+        message = "The Raspberry Pi 4 does not yet support uboot.";
+      }
+    ];
 
     system.build.installBootLoader = builder;
     system.boot.loader.id = "raspberrypi";
